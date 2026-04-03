@@ -64,6 +64,12 @@ const routes = [
     meta: { requiresAuth: true, requiresMess: true, requiresAdmin: true }
   },
   {
+    path: '/admin/daily-meals',
+    name: 'AdminDailyMeal',
+    component: () => import('../views/AdminDailyMealPage.vue'),
+    meta: { requiresAuth: true, requiresMess: true, requiresAdmin: true }
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('../views/ProfilePage.vue'),

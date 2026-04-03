@@ -9,6 +9,7 @@ export const useMessStore = defineStore('mess', () => {
   const mess = ref(null)
   const members = ref([])
   const selectedMonth = ref(getCurrentMonthKey())
+  console.log('MessStore initialized. Selected Month:', selectedMonth.value)
   const loading = ref(false)
 
   const isAdmin = computed(() => {
@@ -36,7 +37,8 @@ export const useMessStore = defineStore('mess', () => {
 
   async function loadMembers() {
     if (!mess.value?.members?.length) { members.value = []; return }
-    const promises = mess.value.members.map(async (uid) => {
+    const uniqueUids = [...new Set(mess.value.members)]
+    const promises = uniqueUids.map(async (uid) => {
       const snap = await getDoc(doc(db, 'users', uid))
       return snap.exists() ? { id: snap.id, ...snap.data() } : null
     })

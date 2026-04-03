@@ -57,6 +57,7 @@ export function useDeposits() {
       totalDeposits.value = list.reduce((s, d) => s + d.amount, 0)
       loading.value = false
     })
+    return unsubscribe
   }
 
   async function deleteDeposit(id) {

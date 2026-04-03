@@ -13,14 +13,15 @@ export function useMeals() {
   const meals = ref({})
   const allMeals = ref([])
   const loading = ref(false)
-  let unsubscribe = null
+  let unsubscribeUser = null
+  let unsubscribeAll = null
 
   function getMealDocId(userId, date) {
     return `${messStore.mess?.id}_${userId}_${date}`
   }
 
   async function saveMeal(date, breakfast, lunch, dinner, targetUid = null) {
-    if (!messStore.mess) throw new Error('মেস ডাটা পাওয়া যায়নি। দয়া করে পেজ রিফ্রেশ করুন।')
+    if (!messStore.mess) throw new Error('মেস ডাটা পাওয়া যায়নি। দয়া করে পেজ রিফরেশ করুন।')
     const uid = targetUid || authStore.user.uid
     const messId = messStore.mess.id
     const docId = getMealDocId(uid, date)
@@ -44,7 +45,7 @@ export function useMeals() {
     if (!messStore.mess || !uid) return
     const monthKey = messStore.selectedMonth
 
-    if (unsubscribe) unsubscribe()
+    if (unsubscribeUser) unsubscribeUser()
 
     const q = query(
       collection(db, 'meals'),
@@ -54,7 +55,7 @@ export function useMeals() {
     )
 
     loading.value = true
-    unsubscribe = onSnapshot(q, (snap) => {
+    unsubscribeUser = onSnapshot(q, (snap) => {
       const result = {}
       snap.forEach(d => {
         const data = d.data()
@@ -63,13 +64,14 @@ export function useMeals() {
       meals.value = result
       loading.value = false
     })
+    return unsubscribeUser
   }
 
   function listenAllMeals() {
     if (!messStore.mess) return
     const monthKey = messStore.selectedMonth
 
-    if (unsubscribe) unsubscribe()
+    if (unsubscribeAll) unsubscribeAll()
 
     const q = query(
       collection(db, 'meals'),
@@ -78,10 +80,11 @@ export function useMeals() {
     )
 
     loading.value = true
-    unsubscribe = onSnapshot(q, (snap) => {
-      allMeals.value = snap.docs.map(d => d.data())
+    unsubscribeAll = onSnapshot(q, (snap) => {
+      allMeals.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
       loading.value = false
     })
+    return unsubscribeAll
   }
 
   async function getAllMealsOnce(monthKey) {
@@ -96,9 +99,13 @@ export function useMeals() {
   }
 
   function stopListening() {
-    if (unsubscribe) {
-      unsubscribe()
-      unsubscribe = null
+    if (unsubscribeUser) {
+      unsubscribeUser()
+      unsubscribeUser = null
+    }
+    if (unsubscribeAll) {
+      unsubscribeAll()
+      unsubscribeAll = null
     }
   }
 

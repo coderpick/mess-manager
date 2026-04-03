@@ -8,8 +8,9 @@
       </div>
       <div class="text-right">
         <p class="font-bold text-teal-700">৳{{ item.amount }}</p>
-        <button v-if="isAdmin" @click="$emit('delete', item.id)"
-          class="text-xs text-red-400 hover:text-red-600">মুছুন</button>
+        <button v-if="isAdmin" 
+          @click.stop="() => { console.log('Delete button clicked for item:', item.id); $emit('remove', item.id) }"
+          class="text-xs text-red-400 hover:text-red-600 p-1">মুছুন</button>
       </div>
     </div>
     <div v-if="!items.length" class="text-center py-8 text-gray-400">
@@ -22,5 +23,5 @@
 <script setup>
 import { banglaDate } from '../../utils/helpers'
 defineProps({ items: Array, isAdmin: Boolean })
-defineEmits(['delete'])
+defineEmits(['remove'])
 </script>

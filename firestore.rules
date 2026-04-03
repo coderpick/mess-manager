@@ -34,20 +34,30 @@ service cloud.firestore {
     // Bazaar
     match /bazaar/{bazaarId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && 
+      allow create: if request.auth != null && 
         isMessAdmin(request.resource.data.messId);
+      allow update: if request.auth != null && 
+        isMessAdmin(resource.data.messId) &&
+        isMessAdmin(request.resource.data.messId);
+      allow delete: if request.auth != null && 
+        isMessAdmin(resource.data.messId);
     }
 
     // Deposits
     match /deposits/{depositId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && 
+      allow create: if request.auth != null && 
         isMessAdmin(request.resource.data.messId);
+      allow update: if request.auth != null && 
+        isMessAdmin(resource.data.messId) &&
+        isMessAdmin(request.resource.data.messId);
+      allow delete: if request.auth != null && 
+        isMessAdmin(resource.data.messId);
     }
 
     function isMessAdmin(messId) {
-      return get(/databases/$(database)/documents/messes/$(messId)).data.adminUid 
-        == request.auth.uid;
+      return get(/databases/$(database)/documents/messes/$(messId)).data.adminUid == request.auth.uid ||
+        ('admins' in get(/databases/$(database)/documents/messes/$(messId)).data && request.auth.uid in get(/databases/$(database)/documents/messes/$(messId)).data.admins);
     }
   }
 }

@@ -42,3 +42,37 @@
     @apply max-w-lg mx-auto px-4 pt-4 pb-24;
   }
 }
+
+/* Premium Styles */
+.glass-card {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+}
+
+.gradient-teal {
+  @apply bg-gradient-to-br from-teal-500 to-emerald-600;
+}
+
+.gradient-orange {
+  @apply bg-gradient-to-br from-orange-400 to-orange-600;
+}
+
+.gradient-purple {
+  @apply bg-gradient-to-br from-purple-500 to-indigo-600;
+}
+
+.gradient-pink {
+  @apply bg-gradient-to-br from-pink-500 to-rose-600;
+}
+
+.premium-shadow {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -5px rgba(0, 0, 0, 0.05);
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

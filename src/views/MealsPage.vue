@@ -38,9 +38,15 @@ async function handleSave({ date, breakfast, lunch, dinner }) {
 }
 
 watch(() => messStore.selectedMonth, () => {
-  listenUserMeals(authStore.user?.uid)
+  if (messStore.mess) listenUserMeals(authStore.user?.uid)
 })
 
-onMounted(() => listenUserMeals(authStore.user?.uid))
+watch(() => messStore.mess, (newMess) => {
+  if (newMess) listenUserMeals(authStore.user?.uid)
+}, { immediate: true })
+
+onMounted(() => {
+  if (messStore.mess) listenUserMeals(authStore.user?.uid)
+})
 onUnmounted(() => stopListening())
 </script>
