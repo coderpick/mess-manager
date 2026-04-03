@@ -54,15 +54,33 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span v-if="m.id === messStore.mess.adminUid"
-                class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+              <span v-if="messStore.checkAdmin(m.id)"
+                class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">
                 এডমিন
               </span>
-              <button v-else-if="isAdmin"
-                @click="removeMember(m.id, m.name)"
-                class="text-xs text-red-400 hover:text-red-600">
-                বাদ দিন
-              </button>
+              
+              <router-link :to="`/admin/meals/${m.id}`" 
+                class="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded-lg hover:bg-teal-100 transition">
+                মিল এডিট
+              </router-link>
+
+              <div v-if="isAdmin" class="flex gap-1">
+                <button v-if="!messStore.checkAdmin(m.id)"
+                  @click="promoteMember(m.id, m.name)"
+                  class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100">
+                  এডমিন করুন
+                </button>
+                <button v-else-if="m.id !== authStore.user.uid"
+                  @click="demoteMember(m.id, m.name)"
+                  class="text-[10px] bg-red-50 text-red-400 px-2 py-1 rounded-lg hover:bg-red-100">
+                  এডমিন বাদ
+                </button>
+                <button v-if="!messStore.checkAdmin(m.id)"
+                  @click="removeMember(m.id, m.name)"
+                  class="text-[10px] bg-gray-100 text-gray-400 px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-500">
+                  বাদ
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -79,9 +97,9 @@ import { useMess } from '../composables/useMess'
 
 const authStore = useAuthStore()
 const messStore = useMessStore()
-const { updateMessName, removeMember: doRemove } = useMess()
+const { updateMessName, removeMember: doRemove, promoteToAdmin, demoteFromAdmin } = useMess()
 
-const isAdmin = computed(() => messStore.mess?.adminUid === authStore.user?.uid)
+const isAdmin = computed(() => messStore.mess?.admins?.includes(authStore.user?.uid) || messStore.mess?.adminUid === authStore.user?.uid)
 const editName = ref(messStore.mess?.name || '')
 const copied = ref(false)
 
@@ -100,6 +118,24 @@ function copyCode() {
 async function removeMember(uid, name) {
   if (confirm(`${name} কে মেস থেকে বাদ দিতে চান?`)) {
     await doRemove(uid)
+  }
+}
+
+async function promoteMember(uid, name) {
+  if (confirm(`${name} কে এডমিন করতে চান?`)) {
+    await promoteToAdmin(uid)
+    alert(`${name} এখন এডমিন!`)
+  }
+}
+
+async function demoteMember(uid, name) {
+  if (confirm(`${name} কে এডমিন থেকে বাদ দিতে চান?`)) {
+    try {
+      await demoteFromAdmin(uid)
+      alert(`${name} আর এডমিন নন।`)
+    } catch (e) {
+      alert(e.message)
+    }
   }
 }
 </script>

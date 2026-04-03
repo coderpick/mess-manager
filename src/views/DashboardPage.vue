@@ -12,10 +12,29 @@
       </div>
 
       <!-- Quick Stats -->
-      <div class="grid grid-cols-2 gap-3 mb-4">
-        <div class="card text-center">
-          <p class="text-xs text-gray-500">আজকের মোট মিল</p>
-          <p class="text-2xl font-bold text-teal-600">{{ todayTotal.toFixed(1) }}</p>
+        <div class="card text-center col-span-2">
+          <p class="text-xs text-gray-500 mb-1">আজকের মোট মিল</p>
+          <div class="flex justify-around items-center">
+            <div class="text-center">
+              <p class="text-lg font-bold text-teal-600">{{ todayTotal.breakfast.toFixed(1) }}</p>
+              <p class="text-[10px] text-teal-500">সকাল</p>
+            </div>
+            <div class="h-6 w-[1px] bg-gray-100"></div>
+            <div class="text-center">
+              <p class="text-lg font-bold text-teal-600">{{ todayTotal.lunch.toFixed(1) }}</p>
+              <p class="text-[10px] text-teal-500">দুপুর</p>
+            </div>
+            <div class="h-6 w-[1px] bg-gray-100"></div>
+            <div class="text-center">
+              <p class="text-lg font-bold text-teal-600">{{ todayTotal.dinner.toFixed(1) }}</p>
+              <p class="text-[10px] text-teal-500">রাত</p>
+            </div>
+            <div class="h-6 w-[1px] bg-gray-100"></div>
+            <div class="text-center">
+              <p class="text-lg font-bold text-teal-800">{{ todayTotal.all.toFixed(1) }}</p>
+              <p class="text-[10px] text-teal-700 font-bold">মোট</p>
+            </div>
+          </div>
         </div>
         <div class="card text-center">
           <p class="text-xs text-gray-500">এই মাসের বাজার</p>
@@ -25,13 +44,12 @@
           <p class="text-xs text-gray-500">আমার মোট মিল</p>
           <p class="text-2xl font-bold text-purple-600">{{ myTotalMeals.toFixed(1) }}</p>
         </div>
-        <div class="card text-center">
+        <div class="card text-center col-span-2">
           <p class="text-xs text-gray-500">মিল রেট</p>
           <p class="text-2xl font-bold text-pink-600">
             ৳{{ mealRate.toFixed(2) }}
           </p>
         </div>
-      </div>
 
       <!-- My Balance -->
       <div class="card mb-4">
@@ -60,7 +78,7 @@
               @change="saveTodayMeal(key, $event.target.value)"
               class="w-full text-center py-2 rounded-xl border-2 border-teal-200 
                 font-bold text-teal-700 bg-teal-50 focus:ring-2 focus:ring-teal-400 outline-none">
-              <option v-for="v in [0, 0.5, 1, 1.5, 2]" :key="v" :value="v">{{ v }}</option>
+              <option v-for="v in (key === 'breakfast' ? [0, 0.5, 1, 1.5, 2] : [0, 1, 2, 3, 4, 5])" :key="v" :value="v">{{ v }}</option>
             </select>
           </div>
         </div>
@@ -89,18 +107,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '../stores/authStore'
-import { useMessStore } from '../stores/messStore'
-import { useMeals } from '../composables/useMeals'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import { useBazaar } from '../composables/useBazaar'
 import { useDeposits } from '../composables/useDeposits'
-import { getTodayBD, banglaDate } from '../utils/helpers'
-import LoadingSpinner from '../components/common/LoadingSpinner.vue'
+import { useMeals } from '../composables/useMeals'
+import { useAuthStore } from '../stores/authStore'
+import { useMessStore } from '../stores/messStore'
+import { banglaDate, getTodayBD } from '../utils/helpers'
 
 const authStore = useAuthStore()
 const messStore = useMessStore()
-const { meals, allMeals, saveMeal, listenMyMeals, listenAllMeals, stopListening: stopMeals } = useMeals()
+const { meals, allMeals, saveMeal, listenUserMeals, listenAllMeals, stopListening: stopMeals } = useMeals()
 const { totalBazaar: monthBazaar, listenBazaar, stopListening: stopBazaar } = useBazaar()
 const { deposits: allDeposits, listenDeposits, stopListening: stopDeposits } = useDeposits()
 
@@ -119,10 +137,17 @@ const greeting = computed(() => {
 const today = getTodayBD()
 const todayMeal = computed(() => meals.value[today] || {})
 
-const todayTotal = computed(() =>
-  allMeals.value.filter(m => m.date === today)
-    .reduce((s, m) => s + (m.total || 0), 0)
-)
+const todayTotal = computed(() => {
+  const tMeals = allMeals.value.filter(m => m.date === today)
+  const stats = { breakfast: 0, lunch: 0, dinner: 0, all: 0 }
+  tMeals.forEach(m => {
+    stats.breakfast += (m.breakfast || 0)
+    stats.lunch += (m.lunch || 0)
+    stats.dinner += (m.dinner || 0)
+    stats.all += (m.total || 0)
+  })
+  return stats
+})
 
 const myTotalMeals = computed(() =>
   Object.values(meals.value).reduce((s, m) => s + (m.total || 0), 0)
@@ -156,7 +181,7 @@ async function saveTodayMeal(key, val) {
 }
 
 onMounted(() => {
-  listenMyMeals()
+  listenUserMeals(authStore.user?.uid)
   listenAllMeals()
   listenBazaar()
   listenDeposits()

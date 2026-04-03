@@ -28,7 +28,7 @@
           @change="updateMeal(key, $event.target.value)"
           class="w-full text-center py-1.5 rounded-lg border text-sm font-medium
             bg-white border-gray-200 focus:ring-2 focus:ring-teal-400 outline-none">
-          <option v-for="v in mealOptions" :key="v" :value="v">{{ v }}</option>
+          <option v-for="v in (key === 'breakfast' ? breakfastOptions : mealOptions)" :key="v" :value="v">{{ v }}</option>
         </select>
         <div v-else class="py-1.5 rounded-lg bg-gray-100 text-sm font-medium text-gray-600">
           {{ values[key] }}
@@ -40,7 +40,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { isPastDate, isToday, toBanglaNum, getDayName } from '../../utils/helpers'
+import { getDayName, isPastDate, isToday, toBanglaNum } from '../../utils/helpers'
 
 const props = defineProps({
   date: String,
@@ -53,7 +53,8 @@ const emit = defineEmits(['save'])
 
 const locked = computed(() => isPastDate(props.date))
 const today = computed(() => isToday(props.date))
-const mealOptions = [0, 0.5, 1, 1.5, 2]
+const breakfastOptions = [0, 0.5, 1, 1.5, 2]
+const mealOptions = [0, 1, 2, 3, 4, 5]
 const mealTypes = {
   breakfast: { label: '🌅 সকাল' },
   lunch: { label: '☀️ দুপুর' },

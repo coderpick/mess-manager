@@ -18,7 +18,8 @@ export function useMess() {
     const messId = `mess_${uid}_${Date.now()}`
     const messData = {
       name,
-      adminUid: uid,
+      adminUid: uid, // legacy
+      admins: [uid],
       inviteCode,
       members: [uid],
       createdAt: new Date().toISOString()
@@ -80,6 +81,31 @@ export function useMess() {
     await updateDoc(doc(db, 'messes', messStore.mess.id), { name })
     messStore.mess.name = name
   }
+  
+  async function promoteToAdmin(uid) {
+    if (!messStore.mess) return
+    await updateDoc(doc(db, 'messes', messStore.mess.id), {
+      admins: arrayUnion(uid)
+    })
+    await messStore.loadMess(messStore.mess.id)
+  }
 
-  return { createMess, joinMess, removeMember, leaveMess, updateMessName }
+  async function demoteFromAdmin(uid) {
+    if (!messStore.mess) return
+    // Prevent removing the last admin
+    const currentAdmins = messStore.mess.admins || [messStore.mess.adminUid]
+    if (currentAdmins.length <= 1) throw new Error('নিজেড মেসে অন্তত একজন এডমিন থাকতে হবে।')
+    
+    await updateDoc(doc(db, 'messes', messStore.mess.id), {
+      admins: arrayRemove(uid)
+    })
+    // Also update legacy field if it matches
+    if (messStore.mess.adminUid === uid) {
+      const nextAdmin = currentAdmins.find(a => a !== uid)
+      await updateDoc(doc(db, 'messes', messStore.mess.id), { adminUid: nextAdmin })
+    }
+    await messStore.loadMess(messStore.mess.id)
+  }
+
+  return { createMess, joinMess, removeMember, leaveMess, updateMessName, promoteToAdmin, demoteFromAdmin }
 }

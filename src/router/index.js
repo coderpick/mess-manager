@@ -58,6 +58,12 @@ const routes = [
     meta: { requiresAuth: true, requiresMess: true }
   },
   {
+    path: '/admin/meals/:userId',
+    name: 'AdminMealEdit',
+    component: () => import('../views/AdminMealEditPage.vue'),
+    meta: { requiresAuth: true, requiresMess: true, requiresAdmin: true }
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('../views/ProfilePage.vue'),
@@ -100,6 +106,14 @@ router.beforeEach(async (to, from, next) => {
     }
     if (!authStore.userProfile?.messId) {
       return next('/setup')
+    }
+  }
+
+  if (to.meta.requiresAdmin) {
+    const messStoreReq = await import('../stores/messStore')
+    const messStore = messStoreReq.useMessStore()
+    if (!messStore.isAdmin) {
+      return next('/dashboard')
     }
   }
 

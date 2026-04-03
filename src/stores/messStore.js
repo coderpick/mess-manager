@@ -14,7 +14,10 @@ export const useMessStore = defineStore('mess', () => {
   const isAdmin = computed(() => {
     if (!mess.value) return false
     const authStore = useAuthStore()
-    return mess.value.adminUid === authStore.user?.uid
+    const uid = authStore.user?.uid
+    if (!uid) return false
+    // Support multiple admins (array) and backward compatibility (adminUid)
+    return mess.value.admins?.includes(uid) || mess.value.adminUid === uid
   })
 
   async function loadMess(messId) {
@@ -45,7 +48,7 @@ export const useMessStore = defineStore('mess', () => {
   }
 
   function checkAdmin(uid) {
-    return mess.value?.adminUid === uid
+    return mess.value?.admins?.includes(uid) || mess.value?.adminUid === uid
   }
 
   return {

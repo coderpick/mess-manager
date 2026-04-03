@@ -19,9 +19,9 @@ export function useMeals() {
     return `${messStore.mess?.id}_${userId}_${date}`
   }
 
-  async function saveMeal(date, breakfast, lunch, dinner) {
+  async function saveMeal(date, breakfast, lunch, dinner, targetUid = null) {
     if (!messStore.mess) throw new Error('মেস ডাটা পাওয়া যায়নি। দয়া করে পেজ রিফ্রেশ করুন।')
-    const uid = authStore.user.uid
+    const uid = targetUid || authStore.user.uid
     const messId = messStore.mess.id
     const docId = getMealDocId(uid, date)
     const monthKey = date.substring(0, 7)
@@ -40,9 +40,8 @@ export function useMeals() {
     })
   }
 
-  function listenMyMeals() {
-    if (!messStore.mess) return
-    const uid = authStore.user.uid
+  function listenUserMeals(uid) {
+    if (!messStore.mess || !uid) return
     const monthKey = messStore.selectedMonth
 
     if (unsubscribe) unsubscribe()
@@ -112,7 +111,7 @@ export function useMeals() {
 
   return {
     meals, allMeals, loading,
-    saveMeal, listenMyMeals, listenAllMeals,
+    saveMeal, listenUserMeals, listenAllMeals,
     getAllMealsOnce, stopListening, getTodayTotalMeals
   }
 }

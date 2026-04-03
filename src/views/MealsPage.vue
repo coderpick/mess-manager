@@ -16,6 +16,7 @@
 
 <script setup>
 import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '../stores/authStore'
 import { useMessStore } from '../stores/messStore'
 import { useMeals } from '../composables/useMeals'
 import { getDaysInMonth } from '../utils/helpers'
@@ -23,8 +24,9 @@ import MonthSelector from '../components/common/MonthSelector.vue'
 import MealGrid from '../components/meals/MealGrid.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 
+const authStore = useAuthStore()
 const messStore = useMessStore()
-const { meals, loading, saveMeal, listenMyMeals, stopListening } = useMeals()
+const { meals, loading, saveMeal, listenUserMeals, stopListening } = useMeals()
 
 const days = computed(() => getDaysInMonth(messStore.selectedMonth))
 const totalMeals = computed(() =>
@@ -36,9 +38,9 @@ async function handleSave({ date, breakfast, lunch, dinner }) {
 }
 
 watch(() => messStore.selectedMonth, () => {
-  listenMyMeals()
+  listenUserMeals(authStore.user?.uid)
 })
 
-onMounted(() => listenMyMeals())
+onMounted(() => listenUserMeals(authStore.user?.uid))
 onUnmounted(() => stopListening())
 </script>
