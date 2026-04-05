@@ -11,8 +11,12 @@
       </div>
       <div class="text-right">
         <p class="font-bold text-green-600">৳{{ item.amount }}</p>
-        <button v-if="isAdmin" @click="$emit('delete', item.id)"
-          class="text-xs text-red-400 hover:text-red-600">মুছুন</button>
+        <div v-if="isAdmin" class="flex items-center justify-end gap-2 mt-1">
+          <button @click="$emit('edit', item)"
+            class="text-xs font-semibold text-teal-600 hover:text-teal-800 p-1 bg-teal-50 rounded">এডিট</button>
+          <button @click="$emit('delete', item.id)"
+            class="text-xs font-semibold text-red-500 hover:text-red-700 p-1 bg-red-50 rounded">মুছুন</button>
+        </div>
       </div>
     </div>
     <div v-if="!items.length" class="text-center py-8 text-gray-400">
@@ -25,7 +29,7 @@
 <script setup>
 import { banglaDate } from '../../utils/helpers'
 const props = defineProps({ items: Array, members: Array, isAdmin: Boolean })
-defineEmits(['delete'])
+defineEmits(['delete', 'edit'])
 
 function getMemberName(uid) {
   return props.members?.find(m => m.id === uid)?.name || 'অজানা'

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { db } from '../firebase/config'
 import {
-  collection, addDoc, query, where, onSnapshot, deleteDoc, doc
+  collection, addDoc, query, where, onSnapshot, deleteDoc, doc, setDoc
 } from 'firebase/firestore'
 import { useAuthStore } from '../stores/authStore'
 import { useMessStore } from '../stores/messStore'
@@ -27,6 +27,17 @@ export function useDeposits() {
       addedBy: authStore.user.uid,
       createdAt: new Date().toISOString()
     })
+  }
+
+  async function updateDeposit(id, userId, amount, date, note = '') {
+    const monthKey = date.substring(0, 7)
+    await setDoc(doc(db, 'deposits', id), {
+      userId,
+      amount: Number(amount),
+      date,
+      monthKey,
+      note
+    }, { merge: true })
   }
 
   function listenDeposits(userId = null) {
@@ -70,6 +81,6 @@ export function useDeposits() {
 
   return {
     deposits, totalDeposits, loading,
-    addDeposit, listenDeposits, deleteDeposit, stopListening
+    addDeposit, updateDeposit, listenDeposits, deleteDeposit, stopListening
   }
 }

@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { db } from '../firebase/config'
 import {
   collection, addDoc, query, where, onSnapshot,
-  orderBy, deleteDoc, doc
+  orderBy, deleteDoc, doc, setDoc
 } from 'firebase/firestore'
 import { useAuthStore } from '../stores/authStore'
 import { useMessStore } from '../stores/messStore'
@@ -33,6 +33,23 @@ export function useBazaar() {
       console.log('Bazaar entry added successfully')
     } catch (error) {
       console.error('Error adding bazaar:', error)
+      throw error
+    }
+  }
+
+  async function updateBazaar(id, date, description, amount) {
+    try {
+      const monthKey = date.substring(0, 7)
+      console.log('Updating Bazaar entry:', id, { date, description, amount })
+      await setDoc(doc(db, 'bazaar', id), {
+        date,
+        monthKey,
+        description,
+        amount: Number(amount)
+      }, { merge: true })
+      console.log('Bazaar entry updated successfully')
+    } catch (error) {
+      console.error('Error updating bazaar:', error)
       throw error
     }
   }
@@ -80,6 +97,6 @@ export function useBazaar() {
 
   return {
     bazaarList, totalBazaar, loading,
-    addBazaar, listenBazaar, deleteBazaar, stopListening
+    addBazaar, updateBazaar, listenBazaar, deleteBazaar, stopListening
   }
 }

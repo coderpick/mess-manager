@@ -9,22 +9,22 @@
     </div>
 
     <!-- Form (Admin) -->
-    <BazaarForm v-if="isAdmin" @submit="handleAdd" class="mb-4" />
+    <BazaarForm v-if="isAdmin" :edit-item="editItem" @submit="handleSubmit" @cancel="cancelEdit" class="mb-4" />
 
     <div v-if="!isAdmin" class="text-center text-sm text-gray-400 mb-4">
-      🔒 শুধুমাত্র এডমিন বাজার যোগ করতে পারবে
+      🔒 শুধুমাত্র এডমিন বাজার যোগ/আপডেট করতে পারবে
     </div>
 
     <!-- List -->
     <h3 class="font-bold text-gray-800 mb-2">📋 বাজার তালিকা</h3>
     <LoadingSpinner v-if="loading" />
     <BazaarList v-else :items="bazaarList" :is-admin="isAdmin"
-      @remove="handleDelete" />
+      @edit="handleEdit" @remove="handleDelete" />
   </div>
 </template>
 
 <script setup>
-import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { computed, watch, onMounted, onUnmounted, ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { useMessStore } from '../stores/messStore'
 import { useBazaar } from '../composables/useBazaar'
@@ -35,18 +35,33 @@ import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const messStore = useMessStore()
-const { bazaarList, totalBazaar, loading, addBazaar, listenBazaar, deleteBazaar, stopListening } = useBazaar()
+const { bazaarList, totalBazaar, loading, addBazaar, updateBazaar, listenBazaar, deleteBazaar, stopListening } = useBazaar()
 
 const isAdmin = computed(() => messStore.isAdmin)
+const editItem = ref(null)
 
-async function handleAdd(data) {
-  await addBazaar(data.date, data.description, data.amount)
+async function handleSubmit(data) {
+  if (data.id) {
+    await updateBazaar(data.id, data.date, data.description, data.amount)
+    editItem.value = null
+  } else {
+    await addBazaar(data.date, data.description, data.amount)
+  }
 }
+
+function handleEdit(item) {
+  editItem.value = item
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function cancelEdit() {
+  editItem.value = null
+}
+
 async function handleDelete(id) {
-  console.log('Admin Check - User:', authStore.user?.uid, 'Primary Admin:', messStore.mess?.adminUid)
-  console.log('handleDelete called in BazaarPage with ID:', id)
   if (confirm('মুছে ফেলতে চান?')) {
     try {
+      if (editItem.value?.id === id) editItem.value = null
       await deleteBazaar(id)
     } catch (e) {
       alert('Error: ' + e.message)

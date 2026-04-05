@@ -9,11 +9,11 @@
     </div>
 
     <!-- Form (Admin) -->
-    <DepositForm v-if="isAdmin" :members="messStore.members"
-      @submit="handleAdd" class="mb-4" />
+    <DepositForm v-if="isAdmin" :members="messStore.members" :edit-item="editItem"
+      @submit="handleSubmit" @cancel="cancelEdit" class="mb-4" />
 
     <div v-if="!isAdmin" class="text-center text-sm text-gray-400 mb-4">
-      🔒 শুধুমাত্র এডমিন জমা যোগ করতে পারবে
+      🔒 শুধুমাত্র এডমিন জমা যোগ/আপডেট করতে পারবে
     </div>
 
     <!-- Toggle -->
@@ -32,7 +32,7 @@
 
     <LoadingSpinner v-if="loading" />
     <DepositList v-else :items="filteredDeposits" :members="messStore.members"
-      :is-admin="isAdmin" @delete="handleDelete" />
+      :is-admin="isAdmin" @edit="handleEdit" @delete="handleDelete" />
   </div>
 </template>
 
@@ -48,10 +48,11 @@ import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const messStore = useMessStore()
-const { deposits, totalDeposits, loading, addDeposit, listenDeposits, deleteDeposit, stopListening } = useDeposits()
+const { deposits, totalDeposits, loading, addDeposit, updateDeposit, listenDeposits, deleteDeposit, stopListening } = useDeposits()
 
 const isAdmin = computed(() => messStore.mess?.adminUid === authStore.user?.uid)
 const viewMode = ref('all')
+const editItem = ref(null)
 
 const filteredDeposits = computed(() => {
   if (viewMode.value === 'mine') {
@@ -60,11 +61,29 @@ const filteredDeposits = computed(() => {
   return deposits.value
 })
 
-async function handleAdd(data) {
-  await addDeposit(data.userId, data.amount, data.date, data.note)
+async function handleSubmit(data) {
+  if (data.id) {
+    await updateDeposit(data.id, data.userId, data.amount, data.date, data.note)
+    editItem.value = null
+  } else {
+    await addDeposit(data.userId, data.amount, data.date, data.note)
+  }
 }
+
+function handleEdit(item) {
+  editItem.value = item
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function cancelEdit() {
+  editItem.value = null
+}
+
 async function handleDelete(id) {
-  if (confirm('মুছে ফেলতে চান?')) await deleteDeposit(id)
+  if (confirm('মুছে ফেলতে চান?')) {
+    if (editItem.value?.id === id) editItem.value = null
+    await deleteDeposit(id)
+  }
 }
 
 watch(() => messStore.selectedMonth, () => listenDeposits())
